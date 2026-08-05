@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习使郑快乐 · AI Agent 源码拆解笔记</title>
+<style>
+:root {
+  --bg: #0a0c14;
+  --bg-card: #12141f;
+  --bg-card-hover: #181b2a;
+  --border: #1e2235;
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --text-dimmer: #64748b;
+  --blue: #3b82f6;
+  --blue-light: #60a5fa;
+  --purple: #a855f7;
+  --green: #10b981;
+  --orange: #f59e0b;
+  --grad-blue: linear-gradient(135deg, #3b82f6, #6366f1);
+  --grad-purple: linear-gradient(135deg, #a855f7, #7c3aed);
+  --grad-green: linear-gradient(135deg, #10b981, #059669);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Segoe UI', sans-serif;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* Hero */
+.hero {
+  text-align: center;
+  padding: 80px 20px 50px;
+  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(59,130,246,0.12) 0%, transparent 70%);
+}
+.hero h1 {
+  font-size: 2.6rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a855f7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+}
+.hero p {
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.hero .stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 30px;
+}
+.hero .stat {
+  text-align: center;
+}
+.hero .stat-num {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--blue-light);
+}
+.hero .stat-label {
+  font-size: 0.85rem;
+  color: var(--text-dimmer);
+  margin-top: 2px;
+}
+
+/* Container */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+/* Series section */
+.series-section {
+  margin-top: 50px;
+}
+.series-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.series-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  color: white;
+}
+.series-badge.cc { background: var(--grad-blue); }
+.series-badge.pi { background: var(--grad-purple); }
+.series-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.series-desc {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-left: auto;
+}
+
+/* Article cards */
+.cards {
+  display: grid;
+  gap: 12px;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--blue);
+  transform: translateX(4px);
+}
+.card-num {
+  font-family: 'SF Mono', 'Menlo', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-dimmer);
+  min-width: 36px;
+}
+.card-body {
+  flex: 1;
+}
+.card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.card-desc {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+.card-tag {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(59,130,246,0.15);
+  color: var(--blue-light);
+  white-space: nowrap;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dimmer);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+  margin-top: 60px;
+}
+.footer a {
+  color: var(--blue-light);
+  text-decoration: none;
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>学习使郑快乐</h1>
+  <p>从 30 行代码到 5000 行生产系统——AI Agent 源码逐行拆解学习笔记</p>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num">35</div>
+      <div class="stat-label">篇拆解</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">2</div>
+      <div class="stat-label">个系列</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">源码出处</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Pi Series -->
+  <div class="series-section">
+    <div class="series-header">
+      <span class="series-badge pi">Pi 系列</span>
+      <span class="series-title">动手学 Pi</span>
+      <span class="series-desc">14 个文件 5029 行 TypeScript 逐行拆解</span>
+    </div>
+    <div class="cards" id="pi-cards"></div>
+  </div>
+
+  <!-- CC Series -->
+  <div class="series-section">
+    <div class="series-header">
+      <span class="series-badge cc">CC 系列</span>
+      <span class="series-title">Claude Code 原理拆解</span>
+      <span class="series-desc">从 30 行 demo 到完整 Agent Loop</span>
+    </div>
+    <div class="cards" id="cc-cards"></div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>公众号「学习使郑快乐」 · <a href="https://github.com/zhengbigbig/learning-notes">GitHub</a> · 持续更新中</p>
+</div>
+
+<script>
+const piEpisodes = [
+  {num:'EP01', title:'一条消息的七步旅程', desc:'Agent 回路是什么形状的——四种角色、五种事件、call id 因果配对', file:'pi/ep01.html'},
+  {num:'EP02', title:'从一条消息到流式回复', desc:'EventStream 怎么同时管流式过程和最终结果', file:'pi/ep02.html'},
+  {num:'EP03', title:'消息怎么在Pi内部流转', desc:'消息 IR 与 ScriptedModel——统一的内部消息结构', file:'pi/ep03.html'},
+  {num:'EP04', title:'Pi怎么接入不同模型', desc:'Provider 适配器层——SSE 流式翻译', file:'pi/ep04.html'},
+  {num:'EP05', title:'Pi怎么把模型和工具串成循环', desc:'Agent Loop——调模型→执行工具→结果回填', file:'pi/ep05.html'},
+  {num:'EP06', title:'Pi的文件工具怎么实现', desc:'read/write/edit/bash——原子写与工作目录隔离', file:'pi/ep06.html'},
+  {num:'EP07', title:'第二次对话它还记得你', desc:'reducer 状态管理——steer 插话与 followUp 追问', file:'pi/ep07.html'},
+  {num:'EP08', title:'关掉终端重开还在', desc:'JSONL 会话树——commit marker 与崩溃恢复', file:'pi/ep08.html'},
+  {num:'EP09', title:'对话越长越聪明还是越蠢', desc:'上下文压缩——预算投影与 compaction', file:'pi/ep09.html'},
+  {num:'EP10', title:'Pi的知识库怎么加载', desc:'skill 按需激活与扩展 hook 系统', file:'pi/ep10.html'},
+  {num:'EP11', title:'所有零件怎么拼成一台机器', desc:'createRuntime——composition root 六步接线', file:'pi/ep11.html'},
+  {num:'EP12', title:'全源码架构回顾', desc:'14 个文件放一起看整体架构与 CC 对比', file:'pi/ep12.html'},
+];
+
+const ccEpisodes = [
+  {num:'EP01', title:'30行代码，我搞懂了AI编程智能体的全部秘密', file:'cc/EP01-30行代码，我搞懂了AI编程智能体的全部秘密.html'},
+  {num:'EP02', title:'给AI一套专业工具，循环代码一行没改', file:'cc/EP02-给AI一套专业工具，循环代码一行没改.html'},
+  {num:'EP03', title:'让AI碰你的文件前，先过这3道门', file:'cc/EP03-让AI碰你的文件前，先过这3道门.html'},
+  {num:'EP04', title:'给AI加心眼：在它动手前后偷偷挂一层逻辑', file:'cc/EP04-给AI加心眼：在它动手前后偷偷挂一层逻辑.html'},
+  {num:'EP05', title:'Agent也会列TODO清单：让AI先想清楚再动手', file:'cc/EP05-Agent也会列TODO清单：让AI先想清楚再动手.html'},
+  {num:'EP06', title:'派个子Agent去干活：大任务拆小，上下文不污染', file:'cc/EP06-派个子Agent去干活：大任务拆小，上下文不污染.html'},
+  {num:'EP07', title:'用到时才加载：给AI一张按需知识卡片', file:'cc/EP07-用到时才加载：给AI一张按需知识卡片.html'},
+  {num:'EP08', title:'上下文满了腾地方：四层压缩管线', file:'cc/EP08-上下文满了腾地方：四层压缩管线.html'},
+  {num:'EP09', title:'压缩会丢细节，要有一层不丢的：记忆系统', file:'cc/EP09-压缩会丢细节，要有一层不丢的：记忆系统.html'},
+  {num:'EP10', title:'prompt写死了9节课，s10终于让它动起来', file:'cc/EP10-prompt写死了9节课，s10终于让它动起来.html'},
+  {num:'EP11', title:'错误不是终点：Claude Code怎么让Agent自己站起来', file:'cc/EP11-错误不是终点：Claude Code怎么让Agent自己站起来.html'},
+  {num:'EP12', title:'盖房子不能先盖屋顶：Claude Code 的任务依赖系统', file:'cc/EP12-盖房子不能先盖屋顶：Claude Code 的任务依赖系统.html'},
+  {num:'EP13', title:'别让AI守着进度条：慢命令该进后台', file:'cc/EP13-别让AI守着进度条：慢命令该进后台.html'},
+  {num:'EP14', title:'没人发消息，AI也会自己开工：Cron调度器', file:'cc/EP14-没人发消息，AI也会自己开工：Cron调度器.html'},
+  {num:'EP15', title:'子Agent只是临时工：Claude Code怎样组队', file:'cc/EP15-子Agent只是临时工：Claude Code怎样组队.html'},
+  {num:'EP16', title:'邮箱有了为什么还会乱发邮件', file:'cc/EP16-邮箱有了为什么还会乱发邮件.html'},
+  {num:'EP17', title:'s17新增的是会找活', file:'cc/EP17-s17新增的是会找活.html'},
+  {num:'EP18', title:'owner分开了文件为什么还会互相覆盖', file:'cc/EP18-owner分开了文件为什么还会互相覆盖.html'},
+  {num:'EP19', title:'MCP到底是什么大模型的外挂知识库', file:'cc/EP19-MCP到底是什么大模型的外挂知识库.html'},
+  {num:'EP20', title:'20节课走了一条什么路', file:'cc/EP20-20节课走了一条什么路.html'},
+  {num:'衍生01', title:'从ClaudeCode取经如何写出高效的提示词', file:'cc/衍生01-从ClaudeCode取经如何写出高效的提示词.html'},
+  {num:'衍生02', title:'AI工具这么成熟还需要关注promptcache吗', file:'cc/衍生02-AI工具这么成熟还需要关注promptcache吗.html'},
+  {num:'衍生03', title:'又一个AI编码工具Pi到底有什么不一样', file:'cc/衍生03-又一个AI编码工具Pi到底有什么不一样.html'},
+];
+
+function renderCards(episodes, containerId) {
+  const container = document.getElementById(containerId);
+  episodes.forEach(ep => {
+    const card = document.createElement('a');
+    card.className = 'card';
+    card.href = ep.file;
+    card.innerHTML = `
+      <span class="card-num">${ep.num}</span>
+      <div class="card-body">
+        <div class="card-title">${ep.title}</div>
+        ${ep.desc ? `<div class="card-desc">${ep.desc}</div>` : ''}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+renderCards(piEpisodes, 'pi-cards');
+renderCards(ccEpisodes, 'cc-cards');
+</script>
+
+</body>
+</html>
