@@ -85,10 +85,31 @@ body {
   max-width: 580px; margin-bottom: 48px;
 }
 .scroll-hint {
-  position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
-  color: var(--text-faint); font-size: 24px; animation: bounce 2s infinite;
+  position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: var(--text-dim); cursor: pointer; transition: color 0.3s;
+  animation: floatHint 2s ease-in-out infinite;
 }
-@keyframes bounce { 50% { transform: translate(-50%, 8px); } }
+.scroll-hint:hover { color: var(--text); }
+.scroll-hint .hint-text {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+}
+.scroll-hint .hint-arrow {
+  width: 28px; height: 44px; border: 2px solid var(--text-dim); border-radius: 14px;
+  display: flex; align-items: flex-start; justify-content: center; padding-top: 8px;
+}
+.scroll-hint .hint-dot {
+  width: 4px; height: 8px; border-radius: 2px; background: var(--text-dim);
+  animation: dotScroll 1.5s ease-in-out infinite;
+}
+@keyframes dotScroll {
+  0% { opacity: 0; transform: translateY(-2px); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(8px); }
+}
+@keyframes floatHint {
+  50% { transform: translate(-50%, -6px); }
+}
 
 /* Course cards */
 .courses {
@@ -245,7 +266,10 @@ body {
       <div class="hero-badge"><span class="pulse"></span> AI Agent 源码拆解 · 持续更新</div>
       <h1>把 <span class="grad">AI Agent</span> 的源码<br>一行一行拆给你看</h1>
       <p>不是看文档那种了解，是真把源码跑起来、改一改、看看它到底怎么工作的。每篇都贴真实源码，带行号，讲设计意图。</p>
-      <div class="scroll-hint">⌄</div>
+      <div class="scroll-hint" onclick="document.querySelector('.courses').scrollIntoView({behavior:'smooth'})">
+        <span class="hint-text">向下探索</span>
+        <div class="hint-arrow"><div class="hint-dot"></div></div>
+      </div>
     </section>
     <section class="courses">
       <div class="courses-label">选择课程</div>
