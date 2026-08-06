@@ -210,10 +210,12 @@ body {
 .article-frame-wrap {
   max-width: 800px; margin: 0 auto; padding: 40px 24px;
 }
+.article-frame-wrap {
+  max-width: 760px; margin: 0 auto; padding: 40px 24px;
+}
 .article-frame-wrap iframe {
-  width: 100%; min-height: calc(100vh - 80px);
-  border: none; border-radius: 12px;
-  background: #fff;
+  width: 100%; border: none; border-radius: 12px;
+  background: #fff; display: block;
 }
 
 /* Back button */
@@ -302,7 +304,7 @@ body {
         <button class="back-btn" onclick="goBack()">← 返回目录</button>
         <div id="articleContent" style="background:#fff;border-radius:12px;overflow:hidden;"></div>
       </div>
-      <div id="articleLoader" style="text-align:center;padding:120px 0;">
+      <div id="articleLoader" style="display:none;" style="text-align:center;padding:120px 0;">
         <div style="display:inline-block;width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent-blue);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
         <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
       </div>
@@ -388,8 +390,6 @@ function selectSeries(series) {
   if (first) loadArticle(first);
 }
 
-let currentXhr = null;
-
 function loadArticle(el) {
   const src = el.dataset.src;
   if (!src) return;
@@ -401,47 +401,42 @@ function loadArticle(el) {
   // Show article view
   document.getElementById('welcome').style.display = 'none';
   document.getElementById('articleView').style.display = 'block';
-  document.getElementById('articleLoader').style.display = 'block';
-  document.getElementById('articleContent').innerHTML = '';
 
   // Close sidebar on mobile
   document.querySelector('.sidebar').classList.remove('open');
 
-  // Fetch article HTML
-  if (currentXhr) currentXhr.abort();
-  currentXhr = new XMLHttpRequest();
-  currentXhr.onload = function() {
-    if (this.status === 200) {
-      // Extract the section content (the styled article body)
-      let html = this.responseText;
-      // Try to find the main content section
-      let match = html.match(/<section[^>]*>([\s\S]*?)<\/section>/);
-      let content;
-      if (match) {
-        content = '<section style="max-width:100%;padding:24px 28px;">' + match[1] + '</section>';
-      } else {
-        content = html;
-      }
+  // Build iframe - preserves relative paths and all original styles
+  const wrap = document.getElementById('articleContent');
+  wrap.innerHTML = '<iframe id="articleFrame" src="' + src + '" style="width:100%;border:none;min-height:100vh;" onload="onFrameLoad(this)"></iframe>';
+  document.querySelector('.main').scrollTop = 0;
+}
 
-      // Adapt WeChat styles for web: make images responsive, fix code overflow
-      content = content.replace(/<img/g, '<img style="max-width:100%;height:auto;"');
-      content = content.replace(/<pre /g, '<pre style="overflow-x:auto;font-size:13px;line-height:1.6;" ');
-      content = content.replace(/font-size:\s*1[0-9]\.5px/g, 'font-size:15px');
-
-      document.getElementById('articleContent').innerHTML = content;
-      document.getElementById('articleLoader').style.display = 'none';
-      document.querySelector('.main').scrollTop = 0;
-    } else {
-      document.getElementById('articleContent').innerHTML = '<div style="padding:60px;text-align:center;color:#94a3b8;">文章加载失败</div>';
-      document.getElementById('articleLoader').style.display = 'none';
-    }
-  };
-  currentXhr.onerror = function() {
-    document.getElementById('articleContent').innerHTML = '<div style="padding:60px;text-align:center;color:#94a3b8;">网络错误</div>';
-    document.getElementById('articleLoader').style.display = 'none';
-  };
-  currentXhr.open('GET', src, true);
-  currentXhr.send();
+function onFrameLoad(frame) {
+  try {
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    // Auto-resize iframe to content height
+    const resize = () => {
+      const h = doc.documentElement.scrollHeight || doc.body.scrollHeight;
+      frame.style.height = (h + 40) + 'px';
+    };
+    resize();
+    // Re-check after images load
+    doc.querySelectorAll('img').forEach(img => {
+      img.addEventListener('load', resize);
+    });
+    // Also inject a style override for better web reading
+    const style = doc.createElement('style');
+    style.textContent = `
+      body { margin:0 !important; padding:0 !important; }
+      section { max-width: 720px !important; margin: 0 auto !important; padding: 32px 24px !important; }
+      pre { overflow-x: auto !important; max-width: 100% !important; font-size: 13px !important; }
+      img { max-width: 100% !important; height: auto !important; }
+      table { max-width: 100% !important; display: block !important; overflow-x: auto !important; }
+    `;
+    doc.head.appendChild(style);
+  } catch(e) {
+    console.log('iframe cross-origin:', e);
+  }
 }
 
 function goBack() {
