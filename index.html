@@ -192,6 +192,25 @@ body {
   width: 100%; border: none; border-radius: 12px; background: #fff; display: block;
 }
 
+/* Article navigation */
+.article-nav {
+  display: flex; gap: 16px; margin-top: 40px;
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; gap: 4px;
+  padding: 20px 24px; border-radius: 16px; cursor: pointer;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  color: var(--text-dim); transition: all 0.25s; text-align: left;
+  font-family: inherit;
+}
+.nav-btn.next { text-align: right; align-items: flex-end; }
+.nav-btn:hover { background: var(--glass-hover); border-color: var(--blue); color: var(--text); transform: translateY(-2px); }
+.nav-btn:disabled { opacity: 0.3; cursor: default; transform: none; border-color: var(--glass-border); background: var(--glass); }
+.nav-btn:disabled:hover { background: var(--glass); border-color: var(--glass-border); color: var(--text-dim); transform: none; }
+.nav-btn-label { font-size: 12px; font-weight: 700; color: var(--blue); letter-spacing: 0.1em; }
+.nav-btn:disabled .nav-btn-label { color: var(--text-faint); }
+.nav-btn-title { font-size: 14px; line-height: 1.4; }
+
 .mobile-bar { display: none; }
 
 @media (max-width: 900px) {
@@ -275,6 +294,17 @@ body {
       </div>
       <div class="article-wrap">
         <div id="articleContent"></div>
+        <div class="article-nav" id="articleNav" style="display:none;">
+          <button class="nav-btn prev" id="navPrev" onclick="navArticle(-1)">
+            <span class="nav-btn-arrow">←</span>
+            <span class="nav-btn-label">上一篇</span>
+            <span class="nav-btn-title" id="prevTitle"></span>
+          </button>
+          <button class="nav-btn next" id="navNext" onclick="navArticle(1)">
+            <span class="nav-btn-label">下一篇 →</span>
+            <span class="nav-btn-title" id="nextTitle"></span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -342,6 +372,14 @@ const DATA = {
 };
 
 let currentCourse = null;
+let currentArticleIdx = 0;
+let flatArticles = []; // flattened for prev/next navigation
+
+function getFlatArticles(course) {
+  const items = [];
+  DATA[course].groups.forEach(g => g.items.forEach(item => items.push(item)));
+  return items;
+}
 
 function showLanding() {
   document.getElementById('page-landing').classList.add('active');
@@ -352,6 +390,7 @@ function showLanding() {
 function showCourse(course) {
   currentCourse = course;
   const d = DATA[course];
+  flatArticles = getFlatArticles(course);
 
   // Title
   const st = document.getElementById('sidebarTitle');
@@ -361,11 +400,13 @@ function showCourse(course) {
   // Build nav
   const nav = document.getElementById('nav');
   let html = '';
+  let flatIdx = 0;
   d.groups.forEach(group => {
     html += `<div class="nav-group"><div class="nav-label">${group.label}</div>`;
     group.items.forEach(item => {
-      html += `<a class="nav-link" data-src="${item.src}" onclick="loadArticle(this,'${d.color}')">
+      html += `<a class="nav-link" data-src="${item.src}" data-idx="${flatIdx}" onclick="loadArticleByIdx(${flatIdx},'${d.color}')">
         <span class="nav-num">${item.ep}</span><span>${item.title}</span></a>`;
+      flatIdx++;
     });
     html += '</div>';
   });
@@ -375,30 +416,68 @@ function showCourse(course) {
   document.getElementById('page-landing').classList.remove('active');
   document.getElementById('page-detail').classList.add('active');
   document.getElementById('articleContent').innerHTML = '';
+  document.getElementById('articleNav').style.display = 'none';
 
   // Auto-load first article
-  const firstLink = nav.querySelector('.nav-link');
-  if (firstLink) loadArticle(firstLink, d.color);
+  loadArticleByIdx(0, d.color);
 
   window.scrollTo(0, 0);
 }
 
-function loadArticle(el, color) {
-  const src = el.dataset.src;
-  if (!src) return;
+function loadArticleByIdx(idx, color) {
+  if (idx < 0 || idx >= flatArticles.length) return;
+  currentArticleIdx = idx;
+  const item = flatArticles[idx];
 
-  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-  el.classList.add('active');
+  // Update active nav link
+  document.querySelectorAll('.nav-link').forEach(l => {
+    l.classList.remove('active');
+    if (parseInt(l.dataset.idx) === idx) l.classList.add('active');
+  });
   document.getElementById('sidebar').classList.remove('open');
 
   // Mobile title
-  document.getElementById('mobileTitle').textContent = el.querySelector('span:last-child').textContent;
+  document.getElementById('mobileTitle').textContent = item.title;
 
-  // Load via iframe - preserves relative paths and all styles
+  // Load iframe
   const container = document.getElementById('articleContent');
-  container.innerHTML = `<iframe id="artFrame" src="${src}" style="width:100%;border:none;min-height:80vh;" onload="onFrameLoad(this)"></iframe>`;
-  document.querySelector('.main-area').scrollTop = 0;
+  container.innerHTML = `<iframe id="artFrame" src="${item.src}" style="width:100%;border:none;min-height:80vh;" onload="onFrameLoad(this)"></iframe>`;
+
+  // Update prev/next nav
+  const navBar = document.getElementById('articleNav');
+  navBar.style.display = 'flex';
+
+  const prevBtn = document.getElementById('navPrev');
+  const nextBtn = document.getElementById('navNext');
+  const prevTitle = document.getElementById('prevTitle');
+  const nextTitle = document.getElementById('nextTitle');
+
+  if (idx > 0) {
+    prevBtn.disabled = false;
+    prevTitle.textContent = flatArticles[idx-1].title;
+  } else {
+    prevBtn.disabled = true;
+    prevTitle.textContent = '已是第一篇';
+  }
+  if (idx < flatArticles.length - 1) {
+    nextBtn.disabled = false;
+    nextTitle.textContent = flatArticles[idx+1].title;
+  } else {
+    nextBtn.disabled = true;
+    nextTitle.textContent = '已是最后一篇';
+  }
+
   window.scrollTo(0, 0);
+}
+
+function navArticle(direction) {
+  loadArticleByIdx(currentArticleIdx + direction, DATA[currentCourse].color);
+}
+
+function loadArticle(el, color) {
+  // Legacy compat - find idx from element
+  const idx = parseInt(el.dataset.idx) || 0;
+  loadArticleByIdx(idx, color);
 }
 
 function onFrameLoad(frame) {
@@ -427,8 +506,10 @@ function onFrameLoad(frame) {
 
 // Keyboard
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    if (document.getElementById('page-detail').classList.contains('active')) showLanding();
+  if (document.getElementById('page-detail').classList.contains('active')) {
+    if (e.key === 'Escape') showLanding();
+    if (e.key === 'ArrowLeft' && currentArticleIdx > 0) navArticle(-1);
+    if (e.key === 'ArrowRight' && currentArticleIdx < flatArticles.length - 1) navArticle(1);
   }
 });
 </script>
