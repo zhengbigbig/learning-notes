@@ -405,13 +405,51 @@ function getFlatArticles(course) {
   return items;
 }
 
+// ===== Routing =====
+// URL format: #/cc/EP01-xxx.html  or  #/pi/ep03.html
+function updateHash(course, src) {
+  const hash = `#/${course}/${src}`;
+  if (location.hash !== hash) {
+    history.pushState(null, '', hash);
+  }
+}
+
+function parseHash() {
+  const hash = location.hash;
+  if (!hash.startsWith('#/')) return null;
+  const parts = hash.slice(2).split('/');
+  if (parts.length < 2) return null;
+  const course = parts[0];
+  const src = parts.slice(1).join('/');
+  if (!DATA[course]) return null;
+  return { course, src };
+}
+
+function handleHashChange() {
+  const route = parseHash();
+  if (!route) {
+    showLanding();
+    return;
+  }
+  if (currentCourse !== route.course) {
+    showCourse(route.course, false);
+  }
+  const idx = flatArticles.findIndex(a => a.src === route.src);
+  if (idx >= 0) {
+    loadArticleByIdx(idx, DATA[route.course].color, false);
+  }
+}
+
 function showLanding() {
   document.getElementById('page-landing').classList.add('active');
   document.getElementById('page-detail').classList.remove('active');
+  if (location.hash !== '' && location.hash !== '#/') {
+    history.pushState(null, '', location.pathname);
+  }
   window.scrollTo(0, 0);
 }
 
-function showCourse(course) {
+function showCourse(course, updateRoute = true) {
   currentCourse = course;
   const d = DATA[course];
   flatArticles = getFlatArticles(course);
@@ -443,15 +481,20 @@ function showCourse(course) {
   document.getElementById('articleNav').style.display = 'none';
 
   // Auto-load first article
-  loadArticleByIdx(0, d.color);
+  loadArticleByIdx(0, d.color, updateRoute);
 
   window.scrollTo(0, 0);
 }
 
-function loadArticleByIdx(idx, color) {
+function loadArticleByIdx(idx, color, updateRoute = true) {
   if (idx < 0 || idx >= flatArticles.length) return;
   currentArticleIdx = idx;
   const item = flatArticles[idx];
+
+  // Update URL hash
+  if (updateRoute) {
+    updateHash(currentCourse, item.src);
+  }
 
   // Update active nav link
   document.querySelectorAll('.nav-link').forEach(l => {
@@ -536,6 +579,14 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight' && currentArticleIdx < flatArticles.length - 1) navArticle(1);
   }
 });
+
+// Hash routing: handle back/forward and direct links
+window.addEventListener('hashchange', handleHashChange);
+
+// On initial load, check if there's a hash route
+if (location.hash.startsWith('#/')) {
+  handleHashChange();
+}
 </script>
 </body>
 </html>
