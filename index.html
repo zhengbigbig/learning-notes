@@ -476,8 +476,10 @@ function showCourse(course, updateRoute = true) {
   document.getElementById('articleContent').innerHTML = '';
   document.getElementById('articleNav').style.display = 'none';
 
-  // Auto-load first article
-  loadArticleByIdx(0, d.color, updateRoute);
+  // Auto-load first article only when not navigating from hash
+  if (updateRoute) {
+    loadArticleByIdx(0, d.color, true);
+  }
 
   window.scrollTo(0, 0);
 }
