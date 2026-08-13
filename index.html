@@ -406,7 +406,9 @@ function getFlatArticles(course) {
 // ===== Routing =====
 // URL format: #/cc/EP01-xxx.html  or  #/pi/ep03.html
 function updateHash(course, src) {
-  const hash = `#/${course}/${src}`;
+  // Strip course prefix from src to avoid duplication (#/pi/pi/ep09.html)
+  const cleanSrc = src.startsWith(course + '/') ? src.slice(course.length + 1) : src;
+  const hash = `#/${course}/${cleanSrc}`;
   if (location.hash !== hash) {
     history.pushState(null, '', hash);
   }
@@ -432,7 +434,7 @@ function handleHashChange() {
   if (currentCourse !== route.course) {
     showCourse(route.course, false);
   }
-  const idx = flatArticles.findIndex(a => a.src === route.src);
+  const idx = flatArticles.findIndex(a => a.src === route.src || a.src === route.course + '/' + route.src);
   if (idx >= 0) {
     loadArticleByIdx(idx, DATA[route.course].color, false);
   }
