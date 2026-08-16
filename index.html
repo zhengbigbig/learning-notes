@@ -141,6 +141,7 @@ body {
 
 .course-card.cc { --accent: var(--blue); }
 .course-card.pi { --accent: var(--purple); }
+.course-card.hermes { --accent: var(--amber); }
 
 .card-glow {
   position: absolute; top: -50%; right: -30%; width: 200px; height: 200px;
@@ -187,6 +188,7 @@ body {
 .sidebar-title { font-size: 20px; font-weight: 800; }
 .sidebar-title.cc { color: var(--blue); }
 .sidebar-title.pi { color: var(--purple); }
+.sidebar-title.hermes { color: var(--amber); }
 
 .nav-group { padding: 12px 0; }
 .nav-label {
@@ -392,6 +394,18 @@ const DATA = {
         { ep:'10', title:'丢个markdown自动加载知识：Pi的资源与扩展系统｜动手学Pi EP10', src:'pi/ep10.html' },
         { ep:'11', title:'用确定性测试打败不确定性：ScriptedModel原理｜动手学Pi EP11', src:'pi/ep11.html' },
         { ep:'12', title:'程序跑完不等于任务做对：Pi的独立评测层｜动手学Pi EP12', src:'pi/ep12.html' },
+      ]},
+    ]
+  },
+  hermes: {
+    title: 'Hermes 桌面端',
+    color: 'hermes',
+    groups: [
+      { label: '正片（更新中）', items: [
+        { ep:'01', title:'一次实现三个前端：Hermes桌面端的三层架构｜Hermes桌面篇EP01', src:'hermes/ep01.html' },
+      ]},
+      { label: '规划中', items: [
+        { ep:'02', title:'敬请期待', src:'' },
       ]},
     ]
   }
