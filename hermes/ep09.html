@@ -29,6 +29,36 @@
 <p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">九篇走完：三层架构（EP01）→ 运行主线（EP02）→ Agent Loop（EP03）→ 被接入（EP04）→ 记忆零件（EP05）→ 无人值守（EP06）→ 远程同构（EP07）→ 双层防线（EP08）→ 亲手接入（EP09）。</p>
 <p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">一条主线贯穿：<span style="background: linear-gradient(180deg, transparent 55%, #fff18a 55%); color: #242832; padding: 1px 6px; font-weight: 600;">Hermes 把"agent 本体"和"皮"切得足够开，开到每种边界都能换</span>——前端可换、记忆可换、渠道可加、客户端可接入。桌面端只是这套架构顺手的产物之一，而你这 200 行适配器，是压垮"它只是个桌面 App"这个印象的最后一根稻草：它是一个能长出任意聊天天窗的 agent 运行时。</p>
 <p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">Hermes 桌面篇到这里收官。下一个系列见。</p>
+
+<h3 style="font-size: 17px; font-weight: bold; margin: 28px 0 8px 0; text-align: left; color: #1a1f2e; letter-spacing: 0.5px;">附录A：我们正聊天的这个微信渠道，适配器怎么写</h3>
+<p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">这个系列就是从微信发出去的，所以把 gateway/platforms/weixin.py（2379 行）当实例。它接的不是公众号，是腾讯 iLink Bot API——微信个人号的机器人接口，基址 https://ilinkai.weixin.qq.com。</p>
+<pre style="background-color: #0f1729; background: #0f1729; color: #e1e7ff; padding: 16px 18px; border-radius: 10px; font-size: 10px; line-height: 1.6; font-family: 'JetBrains Mono', 'Menlo', 'Consolas', 'SF Mono', monospace; white-space: pre; overflow-x: auto; word-break: normal; margin: 16px 0; border: 1px solid #1e2a4a; -webkit-overflow-scrolling: touch; -moz-tab-size: 2; tab-size: 2;"># gateway/platforms/weixin.py:78（真实源码节选）
+ILINK_BASE_URL = "https://ilinkai.weixin.qq.com"
+CHANNEL_VERSION = "2.2.0"
+
+# 收发两件套：长轮询拿消息 + 回显 context_token 发消息
+EP_GET_UPDATES = "ilink/bot/getupdates"
+EP_SEND_MESSAGE = "ilink/bot/sendmessage"
+
+# 长轮询 35 秒挂起，没有消息就等，有消息立刻返回
+LONG_POLL_TIMEOUT_MS = 35_000</pre>
+<p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">收消息是一个无限循环的轮询任务。connect()（weixin.py:1264）检查依赖和 token 后，创建两个 aiohttp 会话（一个专管轮询、一个专管发送），然后 asyncio.create_task 启动 _poll_loop（weixin.py:1337）。循环体内一次 getupdates 挂 35 秒，返回的 msgs 列表里每条消息都丢给 _process_message_safe 处理；服务端同时返回 get_updates_buf 游标，存回磁盘，下次续传。会话过期（errcode -14）时暂停 10 分钟再试，连续失败 3 次退避 30 秒。</p>
+<p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">发消息要过一道回显校验：每条收到的消息带一个 context_token（weixin.py:1435），按「账号+对端」存进磁盘缓存；发消息时必须带上最新的那个 token（weixin.py:507），等于「这条回复对应你最近那条消息」。会话过期时还有一条兜底：去掉 token 重发一次（weixin.py:1778）。图片语音走的是另一条 AES-128-ECB 加密的 CDN 协议，先 getuploadurl 拿上传地址再传文件。</p>
+<p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">这正是正文那四个抽象方法在真实渠道上的样子：connect 里拉起轮询任务，send 里带 token 回显，get_chat_info 查会话，disconnect 收任务。基类兜的底（流式编辑、重连、媒体缓存）一样不少。</p>
+
+<h3 style="font-size: 17px; font-weight: bold; margin: 28px 0 8px 0; text-align: left; color: #1a1f2e; letter-spacing: 0.5px;">附录B：为什么它老是让你 stop、compress、new</h3>
+<p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">这是上下文压力的三级响应，各级阈值都写在源码里。</p>
+<pre style="background-color: #0f1729; background: #0f1729; color: #e1e7ff; padding: 16px 18px; border-radius: 10px; font-size: 10px; line-height: 1.6; font-family: 'JetBrains Mono', 'Menlo', 'Consolas', 'SF Mono', monospace; white-space: pre; overflow-x: auto; word-break: normal; margin: 16px 0; border: 1px solid #1e2a4a; -webkit-overflow-scrolling: touch; -moz-tab-size: 2; tab-size: 2;"># agent/context_compressor.py:854（真实源码节选）
+# 第一级：agent 自己的压缩器，边跑边压
+# 阈值 = 有效输入预算 x threshold_percent
+self.threshold_tokens = self._compute_threshold_tokens(
+    context_length, self.threshold_percent, self.max_tokens,
+)</pre>
+<p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">第一级在 agent 内部：每次请求前估算 token，超过阈值就自动把旧对话压成摘要再发给模型（context_compressor.py，触发比约 0.85 上下）。这一级用户无感，发生在工具循环里。</p>
+<p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">第二级在 gateway（run.py:10636 起，注释标注 issue #628）：每条消息进来、agent 还没开跑之前，做一次「session hygiene」检查——按上一轮 API 报告的真实 prompt_tokens（没有就按字符数/4 估算）对比模型上下文窗口的 85%，超了就先压缩再跑。注释里特意写明这个阈值故意比 agent 自己的压缩器高，因为它是兜底安全网，防止超长会话把 API 请求撑爆。</p>
+<p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">第三级是投降：压缩也压不动了（压缩后还是超），gateway 直接重置会话，给你回一句「Session auto-reset — the conversation exceeded the maximum context size and could not be compressed further. Your next message will start a fresh session.」（run.py:11499）。</p>
+<p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;">所以你在微信里看到的那些提示，对应关系是：让你 /compress 是第二级兜底在动手前后发的提醒；建议 /new 是第三级——历史太长，摘要也救不回来，只能换新会话；/stop 是你手动打断正在跑的任务（run.py:9256 会话锁立即释放，还能强停「还在启动中」的 agent）。老是触发的原因很简单：模型上下文窗口有限，长会话里每一轮都要把全部历史重发一遍，token 消耗随对话长度线性涨。处理办法：任务做完就 /new 开新会话；长任务用 /compress &lt;主题&gt; 定向压缩，只保相关信息；真在跑的长任务被打断用 /stop。</p>
+
 <hr style="border: none; height: 1px; background: linear-gradient(to right, transparent, #818cf8, transparent); margin: 20px 0;"/>
 <p style="font-size: 13px; margin: 16px 0; text-indent: 0; text-align: left; color: #242832; line-height: 1.65;"><em style="font-style: italic; color: #5a6577;">素材：gateway/platforms/ADDING_A_PLATFORM.md（两条路径、插件自动处理清单、钩子文档、Mixin 说明、Required methods 表）；gateway/platforms/base.py:2863-2924（四个抽象方法）、:2916（REQUIRES_EDIT_FINALIZE）、:2918（create_handoff_thread）、:2945（edit_message）、:2721（_notify_fatal_error）；whatsapp_common.py（Mixin 实例）；plugins/platforms/irc、teams、google_chat（示例）。</em></p>
 </section>
