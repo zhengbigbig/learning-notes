@@ -304,8 +304,19 @@ body {
           <div class="card-title">Hermes 桌面端</div>
           <div class="card-desc">拆 Nous Research 的开源桌面 Agent：一次实现三个前端的三层架构、Electron 管 Python 后端、ACP 协议、记忆与技能闭环。</div>
           <div class="card-meta">
-            <span class="card-tag">11 EP 规划</span>
-            <span class="card-tag">连载中</span>
+            <span class="card-tag">9 EP</span>
+            <span class="card-tag">1 衍生</span>
+            <span class="card-tag">已完结</span>
+          </div>
+        </div>
+        <div class="course-card dsh" onclick="showCourse('dsh')">
+          <div class="card-glow"></div>
+          <div class="card-icon">◈</div>
+          <div class="card-title">dsh 源码篇</div>
+          <div class="card-desc">DeepSeek 开源的 agent harness：模型适配器、工具注册表、会话日志、连 Agent Loop 本身都是插件，十集拆完一棵可逆生长的插件树。</div>
+          <div class="card-meta">
+            <span class="card-tag">10 EP</span>
+            <span class="card-tag">已完结</span>
           </div>
         </div>
       </div>
@@ -425,6 +436,24 @@ const DATA = {
     { title:'衍生篇', items:[
         { ep:'01', title:'Skill自沉淀：把经验写进文件，OpenClaw让你先审批｜衍生篇01', src:'hermes/ep10.html' },
     ]},
+    ]
+  },
+  dsh: {
+    title: 'dsh 源码篇',
+    color: 'dsh',
+    groups: [
+      { label: '正片', items: [
+        { ep:'00', title:'一切皆插件：dsh连循环都是挂上去的｜dsh源码篇EP00', src:'dsh/ep00.html' },
+        { ep:'01', title:'Cordis五概念：插件框架的发动机｜dsh源码篇EP01', src:'dsh/ep01.html' },
+        { ep:'02', title:'组装线：78行patch拼出一个dsh｜dsh源码篇EP02', src:'dsh/ep02.html' },
+        { ep:'03', title:'Agent Loop：turn和step的双层循环｜dsh源码篇EP03', src:'dsh/ep03.html' },
+        { ep:'04', title:'会话日志：模型可见即已记录｜dsh源码篇EP04', src:'dsh/ep04.html' },
+        { ep:'05', title:'工具三段瀑布：权限执行结果各一道关｜dsh源码篇EP05', src:'dsh/ep05.html' },
+        { ep:'06', title:'LLM seam：适配器注册表与休眠路由｜dsh源码篇EP06', src:'dsh/ep06.html' },
+        { ep:'07', title:'system-prompt：每步组装一次的段注册表｜dsh源码篇EP07', src:'dsh/ep07.html' },
+        { ep:'08', title:'subagent八提供方：一个接口后面的千军万马｜dsh源码篇EP08', src:'dsh/ep08.html' },
+        { ep:'09', title:'双表层与动手写一个插件｜dsh源码篇EP09', src:'dsh/ep09.html' },
+      ]},
     ]
   }
 };
