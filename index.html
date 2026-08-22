@@ -435,7 +435,7 @@ const DATA = {
         { ep:'08', title:'双层防线：四档弹窗与内核熔断｜Hermes桌面篇EP08', src:'hermes/ep08.html' },
         { ep:'09', title:'给Hermes接一个自己的聊天渠道｜Hermes桌面篇EP09', src:'hermes/ep09.html' },
       ]},
-    { title:'衍生篇', items:[
+    { label:'衍生篇', items:[
         { ep:'01', title:'Skill自沉淀：Hermes把经验写进文件，OpenClaw让你先审批｜Hermes衍生篇', src:'hermes/ep10.html' },
     ]},
     ]
@@ -444,6 +444,9 @@ const DATA = {
     title: 'dsh 源码篇',
     color: 'dsh',
     groups: [
+      { label:'前奏', items:[
+        { ep:'00', title:'从 npx 到一万插件：DeepSeek Harness 开篇全览｜dsh源码篇·前奏', src:'dsh/usage-ep00.html' },
+      ]},
       { label: '正片', items: [
         { ep:'00', title:'一切皆插件：dsh连循环都是挂上去的｜dsh源码篇EP00', src:'dsh/ep00.html' },
         { ep:'01', title:'Cordis五概念：插件框架的发动机｜dsh源码篇EP01', src:'dsh/ep01.html' },
@@ -455,9 +458,6 @@ const DATA = {
         { ep:'07', title:'system-prompt：每步组装一次的段注册表｜dsh源码篇EP07', src:'dsh/ep07.html' },
         { ep:'08', title:'subagent八提供方：一个接口后面的千军万马｜dsh源码篇EP08', src:'dsh/ep08.html' },
         { ep:'09', title:'双表层与动手写一个插件｜dsh源码篇EP09', src:'dsh/ep09.html' },
-      ]},
-    { title:'前奏', items:[
-        { ep:'00', title:'从 npx 到一万插件：DeepSeek Harness 开篇全览｜dsh源码篇·前奏', src:'dsh/usage-ep00.html' },
       ]},
     ]
   }
@@ -534,7 +534,7 @@ function showCourse(course, updateRoute = true) {
   let html = '';
   let flatIdx = 0;
   d.groups.forEach(group => {
-    html += `<div class="nav-group"><div class="nav-label">${group.label}</div>`;
+    html += `<div class="nav-group"><div class="nav-label">${group.label ?? group.title}</div>`;
     group.items.forEach(item => {
       html += `<a class="nav-link" data-src="${item.src}" data-idx="${flatIdx}" onclick="loadArticleByIdx(${flatIdx},'${d.color}')">
         <span class="nav-num">${item.ep}</span><span>${item.title}</span></a>`;
