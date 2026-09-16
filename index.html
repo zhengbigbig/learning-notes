@@ -143,6 +143,7 @@ body {
 .course-card.pi { --accent: var(--purple); }
 .course-card.hermes { --accent: var(--amber); }
 .dsh { --accent: var(--cyan); }
+.aip { --accent: var(--green); }
 
 .card-glow {
   position: absolute; top: -50%; right: -30%; width: 200px; height: 200px;
@@ -191,6 +192,7 @@ body {
 .sidebar-title.pi { color: var(--purple); }
 .sidebar-title.hermes { color: var(--amber); }
 .dsh { color: var(--cyan); }
+.sidebar-title.aip { color: var(--green); }
 
 .nav-group { padding: 12px 0; }
 .nav-label {
@@ -335,6 +337,16 @@ body {
           <div class="card-icon">🔭</div>
           <div class="card-title">dsh 更新前瞻</div>
           <div class="card-desc">盯 dsh 每一次破坏性更新：新旧源码逐文件对账，谁会坏、谁没事、影响谁，抢在官方前面替你踩点。</div>
+          <div class="card-meta">
+            <span class="card-tag">3 EP</span>
+            <span class="card-tag">持续更新</span>
+          </div>
+        </div>
+        <div class="course-card aip" onclick="showCourse('aip')">
+          <div class="card-glow"></div>
+          <div class="card-icon">🤖</div>
+          <div class="card-title">AI 产品拆解</div>
+          <div class="card-desc">拆真实 AI 产品的核心功能与实现。第一篇 Multica：人 + AI 编码 Agent 混合团队工作区，服务器不跑一个 agent，26 种 CLI 全在你自己电脑上。</div>
           <div class="card-meta">
             <span class="card-tag">1 EP</span>
             <span class="card-tag">持续更新</span>
@@ -508,6 +520,15 @@ const DATA = {
         { ep:'01', title:'dsh破坏性更新？比传言小得多｜dsh更新前瞻01', src:'dsh/qz01.html' },
         { ep:'02', title:'五天五版：0.1.2-rc.1 落地了什么，弄坏了什么｜dsh更新前瞻02', src:'dsh/qz02.html' },
       { ep:'03', title:'七天四版直上 0.1.5-rc.1：system prompt 能热更新了｜dsh更新前瞻03', src:'dsh/qz03.html' },
+      ]},
+    ]
+  },
+  aip: {
+    title: 'AI 产品拆解',
+    color: 'aip',
+    groups: [
+      { label: '正片', items: [
+        { ep:'01', title:'Multica源码拆解：服务器不跑Agent，AI干活不出你的电脑｜AI产品篇EP01', src:'aip/ep01.html' },
       ]},
     ]
   }
